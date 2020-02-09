@@ -1,0 +1,43 @@
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+# define the CNN architecture
+class CustomModel(nn.Module):
+    def __init__(self):
+        super(CustomModel, self).__init__()
+
+        self.pl0 = nn.AdaptiveMaxPool2d(output_size=(1, 1))
+        self.pl2 = nn.AdaptiveAvgPool2d(output_size=(1, 1))
+        self.bn1 = nn.BatchNorm2d(4096)
+        self.do1 = nn.Dropout2d(p=0.50)
+
+        self.fc1 = nn.Linear(4096, 2048)
+        self.bn2 = nn.BatchNorm1d(2048)
+        self.fc2 = nn.Linear(2048, 1024)
+        self.bn4 = nn.BatchNorm1d(1024)
+        self.fc3 = nn.Linear(1024, 512)
+        self.bn3 = nn.BatchNorm1d(512)
+        self.do2 = nn.Dropout2d(p=0.50)
+
+        self.un_relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        o1 = self.pl0(x)
+        # o1 = torch.flatten(o1, 1)
+        o2 = self.pl2(x)
+        # o2 = torch.flatten(o2, 1)
+
+        o = torch.cat((o1, o2), 1)
+        o = self.bn1(o)
+        o = self.do1(o)
+        o = torch.flatten(o, 1)
+        o = self.fc1(o)
+        o = self.bn2(o)
+        o = self.do2(o)
+        o = self.fc2(o)
+        o = self.bn4(o)
+        o = self.un_relu(o)
+
+        return o
